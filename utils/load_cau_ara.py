@@ -55,8 +55,8 @@ class SequenceEncoder(object):
         self.save_path = save_path
         self.model_name = model_name
         if model_name != "one-hot":
-            pass # 测试用，这样代码不会加载模型。如果无法运行把下行代码取消注释
-            # self.model = SentenceTransformer(model_name, device=device)
+            # pass # 测试用，这样代码不会加载模型。如果无法运行把下行代码取消注释
+            self.model = SentenceTransformer(model_name, device=device)
 
         current_dir = osp.dirname(osp.abspath(__file__))
         self.model_save_path = osp.join(current_dir,'..',self.save_path[:-18],f"{model_name}_embedding.pkl")
