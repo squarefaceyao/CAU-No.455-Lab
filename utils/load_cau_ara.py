@@ -20,6 +20,7 @@ import random
 from sklearn.preprocessing import OneHotEncoder
 import torch.nn as nn
 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 def load_node_csv(path, index_col, encoders=None, **kwargs):
     df = pd.read_csv(path, index_col=index_col, **kwargs)
     mapping = {index: i for i, index in enumerate(df.index.unique())}
@@ -85,7 +86,7 @@ class SequenceEncoder(object):
                 with open(path, "wb") as fOut:
                     pickle.dump({'embeddings': x}, fOut, protocol=pickle.HIGHEST_PROTOCOL)
 
-            return x.cpu()
+            return x.to(device)
 
 
 class GenresEncoder(object):
@@ -123,7 +124,7 @@ def pes_feature(stride):
     my_tensor = my_tensor.unsqueeze(0)
     nosalt = my_tensor[:, :588, :]
     salt = my_tensor[:, 588:, :]
-    return nosalt,salt
+    return nosalt.to(device),salt.to(device)
 
 def ara_data(node_path,edge_path,seq_names,path):
     # 读取蛋白和蛋白mapping # 'description': SequenceEncoder(),
@@ -192,7 +193,7 @@ def ara_data(node_path,edge_path,seq_names,path):
     data.val_mask = allmask['val_mask']
     data.test_mask = allmask['test_mask']
 
-    return data,protein_mapping
+    return data.to(device),protein_mapping.to(device)
 
 if __name__ == '__main__':
     pass

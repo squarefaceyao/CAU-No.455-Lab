@@ -74,20 +74,18 @@ def cross_validation_with_val_set(data,model,args,transform):
         t_end = time.perf_counter()
         durations.append(t_end - t_start)
 
-        fig = plt.figure(figsize=(10, 8))
-        plt.plot(range(1, len(train_losses) + 1), train_losses, label='Talidation loss')
-        # find position of lowest validation loss
-        minposs = train_losses.index(min(train_losses)) + 1
-        plt.axvline(minposs, linestyle='--', color='r', label='Early Stopping Checkpoint')
-        plt.xlabel('epochs')
-        plt.ylabel('values')
-        # plt.ylim(0.7, 1)  # consistent scale
-        # plt.xlim(0, len(val_aucs) + 1)  # consistent scale
-        plt.grid(True)
-        plt.legend()
-        plt.tight_layout()
-        plt.show()
-        plt.close()
+        # fig = plt.figure(figsize=(10, 8))
+        # plt.plot(range(1, len(train_losses) + 1), train_losses, label='Talidation loss')
+        # # find position of lowest validation loss
+        # minposs = train_losses.index(min(train_losses)) + 1
+        # plt.axvline(minposs, linestyle='--', color='r', label='Early Stopping Checkpoint')
+        # plt.xlabel('epochs')
+        # plt.ylabel('values')
+        # plt.grid(True)
+        # plt.legend()
+        # plt.tight_layout()
+        # plt.show()
+        # plt.close()
 
     loss, auc, duration = tensor(train_losses), tensor(test_aucs), tensor(durations)
     loss, auc = loss.view(folds, args.epochs), auc.view(folds, args.epochs)

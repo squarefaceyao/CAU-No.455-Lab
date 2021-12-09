@@ -10,6 +10,7 @@ import shutil
 
 def main(args):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    # device = 'cpu'
     dataset = ARAPPI(root='./Data/ara-protein', seq_name=args.seq_names)
     data = dataset[0]
     del data.train_mask, data.val_mask, data.test_mask
@@ -55,7 +56,7 @@ def parse_args():
 
     parse.add_argument('--lstm_layers', type=int, default=3) # 性能最优
     parse.add_argument('--lstm_hidden', type=int, default=7) # 性能最优
-    parse.add_argument('--out_channels', type=int, default=16) # 性能最优
+    parse.add_argument('--out_channels', type=int, default=16)  # 性能最优
 
     parse.add_argument('--seq_names', type=str, help='chose transform squence protein description',
                         default="all-MiniLM-L6-v2",
@@ -65,11 +66,16 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
-    # args.lr = 0.01
-    # args.lstm_hidden = 3
-    # args.lstm_layers = 1
+    lrs=[0.05,0.04,0.03,0.02,0.01,0.005,0.004,0.003,0.002,0.001]
+    for ep,lr in zip(range(100,1100,100),lrs):
+        args.lr = lr
+        args.epochs = ep
     # args.epochs = 600
     # args.model = 'GcnEncoder'
     # args.model = 'proteinEncoder'
     # args.seq_names = 'one-hot'
-    main(args)
+    # args.lr = 0.01
+        print(f"epochs:{args.epochs},lr:{args.lr}")
+        main(args)
+        print("\n\n")
+

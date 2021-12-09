@@ -9,6 +9,7 @@
 from torch_geometric.nn import GCNConv
 import torch
 import numpy as np
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 class PMESPEncoder(torch.nn.Module):
     def __init__(self, out_channels, num_layers, lstm_hidden):
@@ -16,8 +17,8 @@ class PMESPEncoder(torch.nn.Module):
         self.num_layers = num_layers
         self.lstm_hidden = lstm_hidden
         self.lstm = torch.nn.LSTM(588, self.lstm_hidden, self.num_layers, bidirectional=True)
-        self.h0 = torch.randn(self.num_layers * 2, 3600, self.lstm_hidden)
-        self.c0 = torch.randn(self.num_layers * 2, 3600, self.lstm_hidden)
+        self.h0 = torch.randn(self.num_layers * 2, 3600, self.lstm_hidden).to(device)
+        self.c0 = torch.randn(self.num_layers * 2, 3600, self.lstm_hidden).to(device)
         self.m = torch.nn.Dropout(p=0.1)
         self.conv1_t = GCNConv(384 + self.lstm_hidden  * 2, 2 * out_channels)
         self.conv2_t = GCNConv(2 * out_channels, out_channels)
