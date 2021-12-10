@@ -58,7 +58,7 @@ def parse_args():
                        choices=['proteinEncoder', # 输入数据只有蛋白序列信息
                                 'GcnEncoder' # 输入数据包含蛋白数据和电信号数据
                                 ])
-    parse.add_argument('--epochs', type=int, default=900)
+    parse.add_argument('--epochs', type=int, default=300)
     parse.add_argument('--lr', type=int, default=0.01)
     parse.add_argument('--folds', type=int, default=10)
 
@@ -73,22 +73,28 @@ def parse_args():
     return parse.parse_args()
 
 if __name__ == '__main__':
+    '''
+    # lstm 对AUC的影响 
     args = parse_args()
     # lrs=[0.05,0.04,0.03,0.02,0.01,0.005,0.004,0.003,0.002,0.001]
     import numpy as np
-    _x = np.arange(1, 6, 3)
-    _y = np.arange(1, 6, 3)
+    _x = np.arange(1, 100, 12)
+    _y = np.arange(1, 100, 12) + 7
     _xx, _yy = np.meshgrid(_x, _y)
     x, y = _xx.ravel(), _yy.ravel()
     z = [] # save auc value
     # for ep,lr in zip(range(100,1100,100),lrs):
     #     args.lr = lr
     #     args.epochs = ep
-    args.epochs = 600
+    args.epochs = 300
     # args.model = 'GcnEncoder'
     # args.model = 'proteinEncoder'
     # args.seq_names = 'one-hot'
     # args.lr = 0.01
+    print(f'共进行次{len(x)}实验\n')
+    print(f'lstm_layers的范围是{x}\n')
+    print(f'lstm_hidden的范围是{y}\n')
+
     for layers,hidden in zip(x,y):
         # print(f"epochs:{args.epochs},lr:{args.lr}")
         args.lstm_layers = layers
@@ -120,11 +126,98 @@ if __name__ == '__main__':
 
     colourMap = plt.cm.ScalarMappable(cmap=plt.cm.jet)
     colourMap.set_array(top)
-    colBar = plt.colorbar(colourMap, shrink=0.5, extend='both').set_label('AUC value')
-
+    colBar = plt.colorbar(colourMap, shrink=0.5, extend='both').set_label('AUC Value')
+    plt.savefig(f'{x}lstm_layer-lstm_num和AUC之间的关联',dpi=300)
     plt.show()
+    '''
+    '''epochs 对AUC的影响
+    
+    args = parse_args()
+    # lrs=[0.05,0.04,0.03,0.02,0.01,0.005,0.004,0.003,0.002,0.001]
+    z = []
+    for ep in range(100,1000,100):
+        print(f"epochs:{args.epochs}")
 
+        args.epochs = ep
+        auc_mean = main(args)
 
+        print("\n\n")
+        z.append(auc_mean)
+    print(z)
+    print(list(range(100,1000,100)))
+    '''
+    '''
+    # k-fold 对AUC的影响
+    args = parse_args()
+    ks=[3,5,10]
+    z = []
+    for lr in ks:
+        args.folds = lr
+        print(f"k-fold:{args.folds}")
+        auc_mean = main(args)
+        print("\n\n")
+        z.append(auc_mean)
+    print(z)
+    print(ks)
+    '''
+    # lstm  和GCN hidden对AUC的影响
+    args = parse_args()
+    # lrs=[0.05,0.04,0.03,0.02,0.01,0.005,0.004,0.003,0.002,0.001]
+    import numpy as np
+    outs = [8, 16, 24, 32]
+    lstms = [7, 14, 21, 28]
+    _x = np.array(outs)
+    _y = np.array(lstms)
+    _xx, _yy = np.meshgrid(_x, _y)
+    x, y = _xx.ravel(), _yy.ravel()
+    z = [] # save auc value
+    # for ep,lr in zip(range(100,1100,100),lrs):
+    #     args.lr = lr
+    #     args.epochs = ep
+    args.epochs = 300
+    # args.model = 'GcnEncoder'
+    # args.model = 'proteinEncoder'
+    # args.seq_names = 'one-hot'
+    # args.lr = 0.01
+    print(f'共进行次{len(x)}实验\n')
+    print(f'GCN out的范围是{x}\n')
+    print(f'lstm_hidden的范围是{y}\n')
+
+    for out,lstm in zip(x,y):
+        # print(f"epochs:{args.epochs},lr:{args.lr}")
+        args.out_channels = out
+        args.lstm_hidden = lstm
+        print(f"lstm_layers:{args.lstm_layers},lstm_hidden:{args.lstm_hidden}")
+        auc_mean = main(args)
+        print("\n\n")
+        z.append(auc_mean)
+
+    top = np.array(z)
+
+    localtime = time.asctime(time.localtime(time.time()))
+    # plt 图片大小
+    sns.set_context("talk", font_scale=2.5)
+    # setup the figure and axes
+    fig = plt.figure(figsize=(20, 20))
+    ax1 = fig.add_subplot(projection='3d')
+
+    bottom = np.zeros_like(top)
+    width = depth = 5
+    dz = top
+    offset = dz + np.abs(dz.min())
+    fracs = offset.astype(float) / offset.max()
+    norm = colors.Normalize(fracs.min(), fracs.max())
+    color_values = cm.jet(norm(fracs.tolist()))
+
+    ax1.bar3d(x, y, bottom, width, depth, top, shade=True, color=color_values, edgecolor="black", )
+    ax1.set_title('Shaded')
+
+    colourMap = plt.cm.ScalarMappable(cmap=plt.cm.jet)
+    colourMap.set_array(top)
+    colBar = plt.colorbar(colourMap, shrink=0.5, extend='both').set_label('AUC Value')
+    plt.savefig(f'{x}lstm_layer-lstm_num和AUC之间的关联',dpi=300)
+    plt.show()
+    print("33333")
 
 
 
