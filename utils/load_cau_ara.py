@@ -117,8 +117,8 @@ class IdentityEncoder(object):
     def __call__(self, df):
         return torch.from_numpy(df.values).view(-1, 1).to(self.dtype)
 
-def pes_feature(stride):
-    df = pd.read_csv('./Data/Sos1-100mM.csv', header=None)
+def pes_feature(pes_path):
+    df = pd.read_csv(pes_path, header=None)
     my_array = np.array(df)
     my_tensor = torch.tensor(my_array, dtype=torch.float)
     my_tensor = my_tensor.unsqueeze(0)
@@ -126,7 +126,7 @@ def pes_feature(stride):
     salt = my_tensor[:, 588:, :]
     return nosalt.to(device),salt.to(device)
 
-def ara_data(node_path,edge_path,seq_names,path):
+def ara_data(node_path,edge_path,pes_path,seq_names,path):
     # 读取蛋白和蛋白mapping # 'description': SequenceEncoder(),
     protein_x, protein_mapping = load_node_csv(node_path, index_col='name',
                                                 encoders={
@@ -138,7 +138,7 @@ def ara_data(node_path,edge_path,seq_names,path):
     protein_label = np.argmax(protein_label, axis=1)
     pes_protein_fea = protein_feature[protein_label == 1]
     salt_protein_fea = protein_feature[protein_label == 0]
-    nosalt,salt  =pes_feature(stride=1)
+    nosalt,salt  =pes_feature(pes_path = pes_path)
 
     nosalt = torch.squeeze(nosalt, dim=0)
     nosalt = nosalt.T.repeat(120, 1)
@@ -193,7 +193,7 @@ def ara_data(node_path,edge_path,seq_names,path):
     data.val_mask = allmask['val_mask']
     data.test_mask = allmask['test_mask']
 
-    return data.to(device),protein_mapping.to(device)
+    return data.to(device),protein_mapping
 
 if __name__ == '__main__':
     pass

@@ -35,7 +35,7 @@ class ARAPPI(InMemoryDataset):
          根据列表里的文件名字，检查文件是否存在本地，不在本地就需要下载。
         :return:
         '''
-        names = ['2_train_cau_node.csv','1_train_cau_edge.csv']
+        names = ['3_train_cau_node.csv','2_train_cau_edge.csv']
         # filename = self.url.rpartition('/')[2].split('?')[0]
         # print(filename)
         return [f'{name}' for name in names]
@@ -63,10 +63,11 @@ class ARAPPI(InMemoryDataset):
         :return:
         '''
         print("选择的节点编码方式为：",self.seq_name)
-        protein_path = osp.join(self.raw_dir, '2_train_cau_node.csv')
-        relation_path = osp.join(self.raw_dir , '1_train_cau_edge.csv')
+        protein_path = osp.join(self.raw_dir, '3_train_cau_node.csv')
+        relation_path = osp.join(self.raw_dir , '2_train_cau_edge.csv')
+        pes_path = osp.join(self.raw_dir , '1_Sos1-100mM.csv')
 
-        data,protein_mapping = ara_data(protein_path, relation_path, seq_names=self.seq_name,path = self.processed_paths[0])
+        data,protein_mapping = ara_data(protein_path, relation_path,pes_path, seq_names=self.seq_name,path = self.processed_paths[0])
         # 边预测的时候需要使用，进行正负采样。
         data = data if self.pre_transform is None else self.pre_transform(data)
         torch.save(self.collate([data]), self.processed_paths[0])
