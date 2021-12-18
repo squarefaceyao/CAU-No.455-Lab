@@ -29,11 +29,11 @@ width = total_width / n
 plt.bar(x, pmesp, width=width,label='PMESP')
 for i in range(len(x)):
     x[i] = x[i] + width
-plt.bar(x, GCN_p, width=width, label='GCN_p',tick_label = x1_list,fc = 'r')
+plt.bar(x, GCN_p, width=width, label='GAE_p',tick_label = x1_list,fc = 'r')
 
 for i in range(len(x)):
     x[i] = x[i] + width
-plt.bar(x, GCN_ps, width=width, label='GCN_ps',fc = 'g')
+plt.bar(x, GCN_ps, width=width, label='GAE_ps',fc = 'g')
 
 plt.xlabel('Train epochs')
 plt.ylabel('AUC Value')

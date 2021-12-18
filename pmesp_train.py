@@ -63,8 +63,8 @@ def parse_args():
     parse.add_argument('--folds', type=int, default=10)
 
     parse.add_argument('--lstm_layers', type=int, default=3) # 性能最优
-    parse.add_argument('--lstm_hidden', type=int, default=7) # 性能最优
-    parse.add_argument('--out_channels', type=int, default=16)  # 性能最优
+    parse.add_argument('--lstm_hidden', type=int, default=7) # 性能最优 35
+    parse.add_argument('--out_channels', type=int, default=16)  # 性能最优 10
 
     parse.add_argument('--seq_names', type=str, help='chose transform squence protein description',
                         default="all-MiniLM-L6-v2",
@@ -160,6 +160,7 @@ if __name__ == '__main__':
     print(z)
     print(ks)
     '''
+    """
     # lstm  和GCN hidden对AUC的影响
     args = parse_args()
     # lrs=[0.05,0.04,0.03,0.02,0.01,0.005,0.004,0.003,0.002,0.001]
@@ -218,6 +219,10 @@ if __name__ == '__main__':
     plt.savefig(f'{x}lstm_layer-lstm_num和AUC之间的关联',dpi=300)
     plt.show()
     print("33333")
+    """
+    args = parse_args()
+    auc_mean = main(args)
+    print("\n\n")
 
 
 

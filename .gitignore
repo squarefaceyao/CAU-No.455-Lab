@@ -8,6 +8,7 @@ __pycache__/
 ~*
 *txt
 *Data/
+*result/
 *.png
 # Distribution / packaging
 .Python

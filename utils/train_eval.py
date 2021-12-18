@@ -47,7 +47,8 @@ def cross_validation_with_val_set(data,model,args,transform):
 
         train_data, val_data, test_data = transform(data)  # Explicitly transform data.
         optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
-
+        file_time = time.perf_counter()
+        torch.save(test_data, f"./save_model/{file_time}_{fold + 1}_fold_test_data.pt")
         def train():
             model.train()
             optimizer.zero_grad()
@@ -73,6 +74,7 @@ def cross_validation_with_val_set(data,model,args,transform):
                 print('Epoch: {:03d}, Test AUC: {:.4f}, AP: {:.4f}'.format(epoch, auc, ap))
         t_end = time.perf_counter()
         durations.append(t_end - t_start)
+        torch.save(model.state_dict(),f"./save_model/{file_time}_AUC_{auc:.4f}.pt")
 
         # fig = plt.figure(figsize=(10, 8))
         # plt.plot(range(1, len(train_losses) + 1), train_losses, label='Talidation loss')
