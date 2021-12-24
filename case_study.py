@@ -33,7 +33,7 @@ def k_fold(data, folds):
         train_indices.append(train_mask.nonzero(as_tuple=False).view(-1))
     return train_indices, test_indices, val_indices
 
-def predict_protein(args):
+def predict_protein(args,test_data):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     if args.model == 'PMESP':
@@ -45,7 +45,7 @@ def predict_protein(args):
     model.load_state_dict(torch.load(f"save_model/196.169951_AUC_0.9684.pt")) # 选择训练好的模型
     model.eval()
 
-    test_data = torch.load(f"save_model/196.169951_8_fold_test_data.pt")
+    # test_data = torch.load(f"save_model/196.169951_8_fold_test_data.pt")
     dataset = ARAPPI(root='./Data/ara-protein', seq_name=args.seq_names)
 
     protein_mapping = dataset.protein_mapping
@@ -57,7 +57,6 @@ def predict_protein(args):
         auc, ap = model.test(z, data.pos_edge_label_index, data.neg_edge_label_index)
         return z,auc, ap
 
-    aaa = test_data.x[test_data.test_mask]
     z,auc, ap = test(test_data)
     score = z @ z.t()  # 边链接的评价矩阵
     print(score.shape)
@@ -88,8 +87,8 @@ def predict_protein(args):
     except:
         print(f'{args.protein_name}不在数据集里面')
 
-def main2(log: bool = True):
-    path = osp.join('result','test_dataset_score.pt')
+def main2(score_name, log: bool = True):
+    path = osp.join('result',score_name)
     if osp.exists(path):  # pragma: no cover
         if log:
             print('测试集得分矩阵已经计算好，无需计算！')
@@ -100,8 +99,8 @@ def main2(log: bool = True):
                 print("======================================")
                 print("与" + args.protein_name + "相互作用Top20蛋白质：")
                 print("protein        score")
-                print(res[:20])
-                res[:20].to_csv(f"./result/{args.protein_name}-预测结果.csv")
+                print(res[:200])
+                res[:200].to_csv(f"./result/{args.protein_name}-{score_name[0:3]}-预测结果.csv")
                 return res
             except:
                 print(f'{args.protein_name}不在数据集里面')
@@ -171,12 +170,109 @@ def cross_validation_with_val_set(args):
 
         train_data, val_data, test_data = transform(data)  # Explicitly transform data.
 
-
         torch.save(test_data,f"./save_model/{fold+1}_fold_test_data.pt")
 
+def reset_feature():
 
+    pes_col_path = osp.join("Data", 'Colombia-100mM.csv')
+
+    df = pd.read_csv(pes_col_path, header=None)
+    my_array = np.array(df)
+    my_tensor = torch.tensor(my_array, dtype=torch.float)
+    my_tensor = my_tensor.unsqueeze(0)
+    nosalt = my_tensor[:, :588, :]
+    salt = my_tensor[:, 588:, :]
+
+    test_data = torch.load(f"save_model/196.169951_8_fold_test_data.pt")
+    # salt_protein 是节点特征，前面是电信号（588），后面是蛋白特征（384）
+    salt_protein = test_data.x[test_data.y == 0][:, 588:]
+    pes_protein = test_data.x[test_data.y == 1][:, 588:]
+
+    def cat_pes_protein(salt, salt_protein):
+        salt = torch.squeeze(salt, dim=0)  # 去掉一维卷积的一个维度
+        salt = salt.T.repeat(200, 1)  # 重复向量
+        salt = salt[:salt_protein.shape[0]]  # 电信号维度等于蛋白质维度。这里可以用滑动窗口实现。
+        salt_protein2 = torch.cat([salt, salt_protein], dim=-1)  # 和蛋白序列信息合并
+        return salt_protein2
+
+    salt_protein2 = cat_pes_protein(salt, salt_protein)
+    pes_protein2 = cat_pes_protein(nosalt, pes_protein)
+    protein_and_pes = torch.cat([salt_protein2, pes_protein2], dim=0)
+
+    del test_data.x  # 删掉原先的数据
+
+    test_data.x = protein_and_pes  # 设置新的特征
+    return test_data
+
+
+def pes_col():
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+    if args.model == 'PMESP':
+        model = GAE(PMESPEncoder(out_channels = args.out_channels,
+                                 num_layers = args.lstm_layers,
+                                 lstm_hidden = args.lstm_hidden
+                                 )).to(device)
+
+    model.load_state_dict(torch.load(f"save_model/196.169951_AUC_0.9684.pt")) # 选择训练好的模型
+    model.eval()
+
+    test_data = torch.load(f"save_model/196.169951_8_fold_test_data.pt")
+    dataset = ARAPPI(root='./Data/ara-protein', seq_name=args.seq_names)
+
+    protein_mapping = dataset.protein_mapping
+
+    @torch.no_grad()
+    def test(data):
+        model.eval()
+        z = model.encode(data.x, data.edge_index)
+        auc, ap = model.test(z, data.pos_edge_label_index, data.neg_edge_label_index)
+        return z,auc, ap
+
+    aaa = test_data.x[test_data.test_mask]
+    z,auc, ap = test(test_data)
+    print(auc)
+
+    test_data2 = reset_feature()
+    z2,auc2, ap2 = test(test_data2)
+    print(auc2)
+
+def diff(protein):
+#     protein = "ZIP7"
+    sos_path = osp.join('result',f'{protein}-sos-预测结果.csv')
+    col_path = osp.join('result',f'{protein}-col-预测结果.csv')
+
+    sos_res = pd.read_csv(sos_path)
+    col_res = pd.read_csv(col_path)
+    df1 = sos_res['Unnamed: 0'].to_list()
+    df2 = col_res['Unnamed: 0'].to_list()
+    c = [x for x in df1 if x in df2]
+    d = [y for y in (df1+df2) if y not in c]
+    # print("相同的蛋白", c)
+    print("差异蛋白", d)
+    path = osp.join('result',f'{protein}-col和sos不同电信号预测结果的差异蛋白.csv')
+    pd.DataFrame(d).to_csv(path)
 if __name__ == '__main__':
     args = parse_args()
-    args.protein_name="SPA1"
+    args.protein_name="ZIP7" # ZIP7
+    # TPST GORK AT1G15180 CIB5 IMPA-2 FZL SETH5
+
+
+
+
+
     # cross_validation_with_val_set(args)
-    predict_protein(args)
+    # 创建的得分矩阵
+    # print("电信号数据是野生拟南芥")
+    # test_data2 = reset_feature()
+    # predict_protein(args,test_data = test_data2)
+    # print("电信号数据是sos1型拟南芥")
+    # test_data = torch.load(f"save_model/196.169951_8_fold_test_data.pt")
+    # predict_protein(args,test_data = test_data)
+
+    # 根据得分矩阵寻找测试集连接关系
+    # main2(score_name = "sos1_0.9615_model_test_dataset_score.pt") # 电信号是sos1
+    # main2(score_name = "col_0.9624_model_test_dataset_score.pt") # 电信号是col
+    # pes_col()
+    diff(protein = "ZIP7") # 寻找输入不同电信号对预测结果的影响
+
