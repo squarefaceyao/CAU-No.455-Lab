@@ -68,6 +68,13 @@ def net():
     for i in range(7):
         print(f"{name[i]}蛋白语意信息的长度为{len(des[i])}")
     print(G)
+
+    for p in ['GORK','CNGC10','IMPA-2','GLR2.7','CIB5','ZIP7']:
+
+        print(f"{p}的聚类系数是:{nx.clustering(G, p):.4f}",)
+        print(f"{p}的度指标是:{nx.degree(G, p):.4f}",)
+        print("\n")
+
     return G
 
 if __name__ == '__main__':
