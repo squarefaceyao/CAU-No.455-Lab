@@ -19,6 +19,7 @@ import pickle
 import random
 from sklearn.preprocessing import OneHotEncoder
 import torch.nn as nn
+from .slide_window import Slide_expand
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 def load_node_csv(path, index_col, encoders=None, **kwargs):
@@ -118,13 +119,22 @@ class IdentityEncoder(object):
         return torch.from_numpy(df.values).view(-1, 1).to(self.dtype)
 
 def pes_feature(pes_path):
+    # df = pd.read_csv(pes_path, header=None)
+    # my_array = np.array(df)
+    # my_tensor = torch.tensor(my_array, dtype=torch.float)
+    # my_tensor = my_tensor.unsqueeze(0)
+    # nosalt = my_tensor[:, :588, :]
+    # salt = my_tensor[:, 588:, :]
+    ##### 滑动窗口方法
     df = pd.read_csv(pes_path, header=None)
-    my_array = np.array(df)
-    my_tensor = torch.tensor(my_array, dtype=torch.float)
-    my_tensor = my_tensor.unsqueeze(0)
-    nosalt = my_tensor[:, :588, :]
-    salt = my_tensor[:, 588:, :]
-    return nosalt.to(device),salt.to(device)
+    my_tensor = np.array(df)
+    nosalt = my_tensor[:588, :]
+    salt = my_tensor[588:, :]
+    new_salt = Slide_expand(salt=salt)
+    new_nosalt = Slide_expand(salt=nosalt)
+    #
+
+    return new_nosalt.to(torch.float32),new_salt.to(torch.float32)
 
 def ara_data(node_path,edge_path,pes_path,seq_names,path):
     # 读取蛋白和蛋白mapping # 'description': SequenceEncoder(),
@@ -140,20 +150,20 @@ def ara_data(node_path,edge_path,pes_path,seq_names,path):
     salt_protein_fea = protein_feature[protein_label == 0]
     nosalt,salt  =pes_feature(pes_path = pes_path)
 
-    nosalt = torch.squeeze(nosalt, dim=0)
-    nosalt = nosalt.T.repeat(120, 1)
-    nosalt = nosalt[:pes_protein_fea.shape[0]]
+    # nosalt = torch.squeeze(nosalt, dim=0)
+    # nosalt = nosalt.T.repeat(120, 1)
 
-    # nosalt = nosalt.repeat(pes_protein_fea.shape[0], 1)
-    nosalt_protein = torch.cat([nosalt, pes_protein_fea], dim=-1)
+    nosalt = nosalt[:pes_protein_fea.shape[0]]  # slide
+    nosalt_protein = torch.cat([nosalt, pes_protein_fea], dim=-1) # slide
+    #
+    # salt = torch.squeeze(salt, dim=0) # 去掉一维卷积的一个维度
+    # # salt = salt.repeat(salt_protein_fea.shape[0], 1) # 重复向量
+    # salt = salt.T.repeat(50, 1)# 重复向量
 
-    salt = torch.squeeze(salt, dim=0) # 去掉一维卷积的一个维度
-    # salt = salt.repeat(salt_protein_fea.shape[0], 1) # 重复向量
-    salt = salt.T.repeat(50, 1)# 重复向量
-    salt = salt[:salt_protein_fea.shape[0]]
-    salt_protein = torch.cat([salt, salt_protein_fea], dim=-1) # 和蛋白序列信息合并
+    salt = salt[:salt_protein_fea.shape[0]] # slide
+    salt_protein = torch.cat([salt, salt_protein_fea], dim=-1) # 和蛋白序列信息合并 # slide
 
-    protein_and_pes = torch.cat([salt_protein, nosalt_protein], dim=0)
+    protein_and_pes = torch.cat([salt_protein, nosalt_protein], dim=0).to(torch.float32)
     edge_index, edge_label = load_edge_csv(
         edge_path,
         src_index_col='protein_source',
