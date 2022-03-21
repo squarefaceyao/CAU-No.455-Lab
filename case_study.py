@@ -235,11 +235,16 @@ if __name__ == '__main__':
     # print("电信号数据是sos1型拟南芥")
     # test_data = torch.load(f"save_model/196.169951_8_fold_test_data.pt") # 使用训练模型时的数据
     # sos1_score_path = predict_protein(args=args,test_data = test_data,variety="sos1")
-    for protein in ['GORK','CNGC10','IMPA-2','GLR2.7','CIB5','ZIP7']:
-        args.protein_name=protein # ZIP7 # 输入测试集蛋白计算连接性。用main2函数
-         # 2. 加载不同模型计算测试集链接得分，并计算一个测试集蛋白的链接得分，结果保存在result文件夹
-        main2(score_name = "sos1_0.9615_model_test_dataset_score.pt") # 电信号是sos1
-        main2(score_name = "col_0.9624_model_test_dataset_score.pt") # 电信号是col
-        # pes_col()
-        diff(args)
+
+    #
+    for protein in ['GORK','CNGC10','IMPA-2','GLR2.7','CIB5','CLC-F']:
+        try:
+            args.protein_name=protein # ZIP7 # 输入测试集蛋白计算连接性。用main2函数
+             # 2. 加载不同模型计算测试集链接得分，并计算一个测试集蛋白的链接得分，结果保存在result文件夹
+            main2(score_name = "sos1_0.9620_model_test_dataset_score.pt") # 电信号是sos1
+            main2(score_name = "col_0.9590_model_test_dataset_score.pt") # 电信号是col
+            # pes_col()
+            diff(args)
+        except:
+            print(f'Not found {protein}')
 
