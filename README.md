@@ -10,13 +10,12 @@ Implementation of A Graph Neural Network Model for Predicting Biological Mechani
 
 
 <div>
-<img width=18% src="./images/Fig. 1.png"/>
+<img src="./images/Fig. 1.png"/>
 </div>
-
 
 # Requirements
 
-  * Python 3.6.2
+  * Python 3.7.6
   * For the other packages, please refer to the requirements.txt.
 
 # Usage
@@ -58,7 +57,7 @@ python tradition_ppi.py
 python summarydatasets.py
 ```
 
-### 3. The code for the sliding window method is in utils/slide_window.py
+### 3. The code for the sliding window method is in [utils/slide_window.py](utils/slide_window.py)
 
 ### 4. PesPPI Datasets
 
