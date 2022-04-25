@@ -5,7 +5,7 @@
 ![license](https://img.shields.io/github/license/squarefaceyao/CAU-No.455-Lab)
 
 
-Implementation of A Graph Neural Network Model for Predicting Biological Mechanisms of Plant Electrical Signal Classification in PyTorch Geometric.
+Implementation of Predicting Biological Mechanisms in PyTorch Geometric.
 
 
 
