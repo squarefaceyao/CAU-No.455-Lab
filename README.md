@@ -1,4 +1,4 @@
-# A Graph Neural Network Model for Predicting Biological Mechanisms of Plant Electrical Signal Classification
+# CAU-No.455 laboratory
 ![python](https://img.shields.io/badge/Python%20tested-3.9.x%20%7C%203.8.x%20%7C%203.7.x%20-blue)
 ![requirements](https://img.shields.io/badge/requirements-up%20to%20date-brightgreen)
 ![last_update](https://img.shields.io/badge/last%20update-March%2020%2C%202022-yellowgreen)
@@ -47,7 +47,7 @@ python case_study.py
 python tradition_ppi.py
 ```
 
-### 2. The details of PesPPI datasets used in PMESP
+### 2. Dataset Details
 
 | Datasets | PP   | SP   | Association | LD     | AD   |
 | :------- | :--- | :--- | :---------- | :----- | :--- |
